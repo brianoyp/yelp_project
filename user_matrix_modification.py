@@ -2,7 +2,7 @@
 f = open("data/Iteration_userID/part-00001", "a")
 f.write("(366715, u'farmerMain')\n")
 for i in range(1, 100):
-	f.write("(" + str(i+366715) +", u'famer" + str(i) + "')\n")
+	f.write("(" + str(i+366715) +", u'farmer" + str(i) + "')\n")
 
 f.close()
 
