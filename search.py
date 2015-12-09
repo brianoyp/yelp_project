@@ -16,7 +16,10 @@ import sys
 spark_home = os.environ.get('SPARK_HOME', None)
 yelp_data_home = "/home/derekn/CS6965/yelp_dataset_challenge_academic_dataset"
 business_data = yelp_data_home + "/yelp_academic_dataset_business.json"
-review_score_data = yelp_data_home + "/review_score/*"
+# If review data contains modified data
+#review_data_modified = ''
+review_data_modified = '_modified'
+review_score_data = yelp_data_home + "/review_score" + review_data_modified + "/*"
 #############################################################################################################
 
 # Establish Environment for PYSPARK
@@ -69,7 +72,11 @@ def clean_business(data):
   # Access By:
   #   x[0] = business_id
   d = json.loads(data)
-  return ( d['business_id'], d['name'], d['categories'], d['stars'], d['city'], d['state'], d['review_count'] )
+  if ((d['business_id'] == "-sV52FN-D-I808tyRPEvwg") and ('modified' in review_data_modified)):
+    reviewCount = d['review_count'] + 100
+  else:
+    reviewCount = d['review_count']
+  return ( d['business_id'], d['name'], d['categories'], d['stars'], d['city'], d['state'], reviewCount )
 
 def filter_by_category(category, categories):
   # expects list in categories
@@ -126,30 +133,37 @@ if __name__ == '__main__':
   businessData = sc.textFile(business_data).map(lambda x: clean_business(x))
   businessCount = businessData.count()
 
-  businessSearch = businessData \
-    .filter(lambda x: filter_by_state('NV', x[5])) \
-    .filter(lambda x: filter_by_city('Las Vegas', x[4])) \
-    .filter(lambda x: filter_by_category('Restaurants', x[2])) \
-    .filter(lambda x: x[3] <= 1) \
-    .collect()
-  print businessSearch
-  sys.exit(1)
+  #businessSearch = businessData \
+  #  .filter(lambda x: filter_by_state('NV', x[5])) \
+  #  .filter(lambda x: filter_by_city('Las Vegas', x[4])) \
+  #  .filter(lambda x: filter_by_category('Restaurants', x[2])) \
+  #  .filter(lambda x: x[3] <= 1) \
+  #  .filter(lambda x: x[0] == "-sV52FN-D-I808tyRPEvwg") \
+  #  .collect()
+  #print businessSearch
+  #sys.exit(1)
 
   reviewScore = sc.wholeTextFiles(review_score_data) \
     .flatMap(lambda x: x[1].split("\n")) \
     .map(lambda x: get_data(x))
   reviewScoreCount = reviewScore.count()
 
+  def print_business(data):
+    print data
+
   # Filter Data By City/State/Category
   business = businessData \
-    .filter(lambda x: filter_by_state('PA', x[5])) \
+    .filter(lambda x: filter_by_city('Las Vegas', x[4])) \
+    .filter(lambda x: filter_by_state('NV', x[5])) \
     .filter(lambda x: filter_by_category('Restaurants', x[2])) \
     .map(lambda x: (x[0], x[1])) \
     .join(reviewScore) \
     .sortBy(lambda (businessID, data): data[1], False) \
-    .map(lambda (businessID, data): data[0]) \
-    .take(5)
-  #  .filter(lambda x: filter_by_city('Las Vegas', x[4])) \
+    .map(lambda (businessID, data): (businessID, data[0])) \
+    .zipWithIndex() \
+    .filter(lambda (data, rank): data[0] == "-sV52FN-D-I808tyRPEvwg") \
+    .collect()
+    #.foreach(lambda x: print_business(x)) 
   print "#########################################################################"
   print "                   Top 5 Business Given By Algorithm                     "
   print business

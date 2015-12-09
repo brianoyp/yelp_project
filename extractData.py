@@ -19,7 +19,11 @@ import sys
 spark_home = os.environ.get('SPARK_HOME', None)
 yelp_data_home = "/home/derekn/CS6965/yelp_dataset_challenge_academic_dataset"
 business_data = yelp_data_home + "/yelp_academic_dataset_business.json"
+# If review data contains modified data
+review_data_modified = ''
+#review_data_modified = '_modified'
 review_data = yelp_data_home + "/yelp_academic_dataset_review.json"
+#review_data = yelp_data_home + "/yelp_academic_dataset_review_modified.json"
 # used from TEST DATA
 user_data = "/home/derekn/CS6965/yelp_dataset_challenge_academic_dataset/dummy/user_data/*"
 #############################################################################################################
@@ -82,7 +86,11 @@ def clean_business(data):
   # Access By:
   #   x[0] = business_id
   d = json.loads(data)
-  return ( d['business_id'], d['name'], d['categories'], d['stars'], d['city'], d['state'], d['review_count'] )
+  if ((d['business_id'] == "-sV52FN-D-I808tyRPEvwg") and ('modified' in review_data_modified)):
+    reviewCount = d['review_count'] + 100
+  else:
+    reviewCount = d['review_count']
+  return ( d['business_id'], d['name'], d['categories'], d['stars'], d['city'], d['state'], reviewCount )
 
 def clean_review(data):
   # data =
@@ -226,7 +234,7 @@ if __name__ == '__main__':
   print "#########################################################################"
 
   # Store Review Score to Disk after run
-  reviewScore.saveAsTextFile(yelp_data_home + "/review_score")
+  reviewScore.saveAsTextFile(yelp_data_home + "/review_score" + review_data_modified)
   
   print "DONE"  
   
