@@ -18,8 +18,13 @@ yelp_data_home = "/home/derekn/CS6965/yelp_dataset_challenge_academic_dataset"
 business_data = yelp_data_home + "/yelp_academic_dataset_business.json"
 # If review data contains modified data
 #review_data_modified = ''
-review_data_modified = '_modified'
-review_score_data = yelp_data_home + "/review_score" + review_data_modified + "/*"
+#review_data_modified = '_modified'
+#review_data_modified = '_modified_userWeight'
+review_data_modified = '_userWeight'
+#review_score_data = yelp_data_home + "/review_score" + review_data_modified + "/*"
+review_score_data = yelp_data_home + "/secondEquationSeq/review_score" + review_data_modified + "/*"
+#review_score_data = yelp_data_home + "/BR1/*"
+#review_score_data = yelp_data_home + "/BR2/*"
 #############################################################################################################
 
 # Establish Environment for PYSPARK
@@ -143,9 +148,7 @@ if __name__ == '__main__':
   #print businessSearch
   #sys.exit(1)
 
-  reviewScore = sc.wholeTextFiles(review_score_data) \
-    .flatMap(lambda x: x[1].split("\n")) \
-    .map(lambda x: get_data(x))
+  reviewScore = sc.sequenceFile(review_score_data)
   reviewScoreCount = reviewScore.count()
 
   def print_business(data):

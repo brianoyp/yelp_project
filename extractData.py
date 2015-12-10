@@ -19,13 +19,20 @@ import sys
 spark_home = os.environ.get('SPARK_HOME', None)
 yelp_data_home = "/home/derekn/CS6965/yelp_dataset_challenge_academic_dataset"
 business_data = yelp_data_home + "/yelp_academic_dataset_business.json"
+###### This is the variables that will be set ######
 # If review data contains modified data
-review_data_modified = ''
+#review_data_modified = ''
 #review_data_modified = '_modified'
-review_data = yelp_data_home + "/yelp_academic_dataset_review.json"
+#review_data_modified = '_modified_userWeight'
+#review_data_modified = '_userWeight'
+#review_data = yelp_data_home + "/yelp_academic_dataset_review.json"
 #review_data = yelp_data_home + "/yelp_academic_dataset_review_modified.json"
 # used from TEST DATA
-user_data = "/home/derekn/CS6965/yelp_dataset_challenge_academic_dataset/dummy/user_data/*"
+#user_data = "/home/derekn/CS6965/yelp_dataset_challenge_academic_dataset/dummy/user_data/*"
+#user_data = yelp_data_home + "/dummy/user_data/*"
+#user_data = yelp_data_home + "/dummy/user_data_mod/*"
+#user_data = yelp_data_home + "/userWeight/*"
+#user_data = yelp_data_home + "/uwFullModified/*"
 #############################################################################################################
 
 # Establish Environment for PYSPARK
@@ -55,6 +62,7 @@ except ImportError as e:
   sys.exit(1)
 try: # import OPERATOR/REGEX
   from operator import add
+  from math import log
   print("Successfully imported OPERATOR Modules")
   import re
   print("Successfully imported REGEX Modules")
@@ -147,14 +155,14 @@ def depreciationRate(reviewDate):
 def advantageRate(reviewCount):
   # expects a number (total count of reviews for that business)
   # Advantage Constant = 0.0001
-  return 1 + (reviewCount*0.0001)
+  return 1 + log(reviewCount)
 
-def individualReviewScore(modified_review_score, depreciation_rate, total_number_reviews, advantage_rate):
+def individualReviewScore(MRS_DR, total_number_reviews, advantage_rate):
   # modified_review_score = modifiedReviewScore
   # depreciation_rate = depreciationRate
   # total_number_reviews = total number of reviews for that business
   # advantage_rate = advantageRate
-  return ((modified_review_score * depreciation_rate) / total_number_reviews) * advantage_rate
+  return ((MRS_DR) / total_number_reviews) * advantage_rate
 
 def get_data(text):
   # Expected:
@@ -186,7 +194,6 @@ if __name__ == '__main__':
 
   sc = SparkContext("local", "Simple App")
 
-  print "START"
   # UserData Needs to be processed with PageRank Method before this
   #  Location can be set at the top of this script
   # The commented out code generated test data for this.
@@ -194,47 +201,87 @@ if __name__ == '__main__':
   #  .map(lambda x: clean_user(x)) \
   #  .saveAsTextFile("/home/derekn/CS6965/yelp_dataset_challenge_academic_dataset/user_data")
   #sys.exit(1)
-  userData = sc.wholeTextFiles(user_data) \
-    .map(lambda x: x[1]) \
-    .flatMap(lambda x: x.split("\n")) \
-    .map(lambda x: get_data(x))
-  userCount = userData.count()
 
-  businessData = sc.textFile(business_data).map(lambda x: clean_business(x))
-  businessInfo = businessData.map(lambda x: (x[0], (x[6], advantageRate(x[6]))))
-  businessCount = businessInfo.count()
+  print "START"
+  doneFlag = False
+  iteration = 0
 
-  reviewData = sc.textFile(review_data).map(lambda x: clean_review(x))
-  reviewUserData = reviewData.map(lambda x: (x[1], (x[2], x[3], x[4])) ).join(userData)
+  while(not doneFlag):
+    if(iteration == 0):
+      review_data_modified = ''
+      review_data = yelp_data_home + "/yelp_academic_dataset_review.json"
+      user_data = yelp_data_home + "/dummy/user_data/*" # used from TEST DATA
+    if(iteration == 1):
+      review_data_modified = '_modified'
+      review_data = yelp_data_home + "/yelp_academic_dataset_review_modified.json"
+      user_data = yelp_data_home + "/dummy/user_data_mod/*" # used from TEST DATA
+    if(iteration == 2):
+      review_data_modified = '_modified_userWeight'
+      review_data = yelp_data_home + "/yelp_academic_dataset_review_modified.json"
+      #user_data = yelp_data_home + "/userWeight/*"
+      user_data = yelp_data_home + "/uwFullModified/*"
+    if(iteration == 3):
+      review_data_modified = '_userWeight'
+      review_data = yelp_data_home + "/yelp_academic_dataset_review.json"
+      #user_data = yelp_data_home + "/userWeight/*"
+      user_data = yelp_data_home + "/uwFullModified/*"
 
-  MRSandDR = reviewUserData.map(lambda (userId, data): (data[0][2], (modifiedReviewScore(data[1], data[0][0]), depreciationRate(data[0][1]))) )
-  MRSandDRandBI = MRSandDR.join(businessInfo)
-  MRSandDRandBIcount = MRSandDRandBI.count()
-  reviewScore = MRSandDRandBI.map(lambda (businessID, data): (businessID, individualReviewScore(data[0][0], data[0][1], data[1][0], data[1][1]))) \
-    .reduceByKey(add)
-  reviewScoreCount = reviewScore.count()
+    if 'userWeight' in review_data_modified:
+      userData = sc.sequenceFile(user_data)
+      userCount = userData.count()
+    else:
+      userData = sc.wholeTextFiles(user_data) \
+        .map(lambda x: x[1]) \
+        .flatMap(lambda x: x.split("\n")) \
+        .map(lambda x: get_data(x))
+      userCount = userData.count()
+
+    businessData = sc.textFile(business_data).map(lambda x: clean_business(x))
+    businessInfo = businessData.map(lambda x: (x[0], (x[6], advantageRate(x[6]))))
+    businessCount = businessInfo.count()
+
+    reviewData = sc.textFile(review_data).map(lambda x: clean_review(x))
+    reviewUserData = reviewData.map(lambda x: (x[1], (x[2], x[3], x[4])) ).join(userData)
+
+    MRSandDR = reviewUserData \
+      .map(lambda (userId, data): (data[0][2], modifiedReviewScore(data[1], data[0][0]) * depreciationRate(data[0][1])) ) \
+      .reduceByKey(add)
+    MRSandDRcount = MRSandDR.count()
+    MRSandDRandBI = MRSandDR.join(businessInfo)
+    MRSandDRandBIcount = MRSandDRandBI.count()
+    reviewScore = MRSandDRandBI \
+      .map(lambda (businessID, data): (businessID, individualReviewScore(data[0], data[1][0], data[1][1])))
+    reviewScoreCount = reviewScore.count()
   
-  #print "#########################################################################"
-  #print reviewScore.collect()
-  #print "#########################################################################"
+    #print "#########################################################################"
+    #print reviewScore.collect()
+    #print "#########################################################################"
 
-  reviewBusinessData = reviewData.map(lambda x: (x[4], (x[1], x[2], x[3])) ).join(businessInfo)
-  reviewCount = reviewData.count()
-  reviewBusinessCount = reviewBusinessData.count()
-  reviewUserCount = reviewUserData.count()
+    reviewBusinessData = reviewData.map(lambda x: (x[4], (x[1], x[2], x[3])) ).join(businessInfo)
+    reviewCount = reviewData.count()
+    reviewBusinessCount = reviewBusinessData.count()
+    reviewUserCount = reviewUserData.count()
 
-  print "#########################################################################"
-  print ("   BusinessCount =       " + str(businessCount))
-  print ("   ReviewCount =         " + str(reviewCount))
-  print ("   UserCount =           " + str(userCount))
-  print ("   ReviewBusinessCount = " + str(reviewBusinessCount))
-  print ("   ReviewUserCount =     " + str(reviewUserCount))
-  print ("   MRSandDRandBIcount =  " + str(MRSandDRandBIcount))
-  print ("   ReviewScoreCount =    " + str(reviewScoreCount))
-  print "#########################################################################"
+    # Store Review Score to Disk after run
+    reviewScore.saveAsSequenceFile(yelp_data_home + "/review_score" + review_data_modified)
+    
+    f = open(yelp_data_home + "/output.out", "a")
+    output = ""
+    output = output + "#########################################################################" + "\n"
+    output = output + "   BusinessCount =       " + str(businessCount) + "\n"
+    output = output + "   ReviewCount =         " + str(reviewCount) + "\n"
+    output = output + "   UserCount =           " + str(userCount) + "\n"
+    output = output + "   ReviewBusinessCount = " + str(reviewBusinessCount) + "\n"
+    output = output + "   ReviewUserCount =     " + str(reviewUserCount) + "\n"
+    output = output + "   MRSandDRcount =       " + str(MRSandDRcount) + "\n"
+    output = output + "   MRSandDRandBIcount =  " + str(MRSandDRandBIcount) + "\n"
+    output = output + "   ReviewScoreCount =    " + str(reviewScoreCount) + "\n"
+    output = output + "#########################################################################" + "\n"
+    output = output + "iteration = " + str(iteration)
+    f.write(output)
+    f.close()
+    print output
+    iteration = iteration + 1
 
-  # Store Review Score to Disk after run
-  reviewScore.saveAsTextFile(yelp_data_home + "/review_score" + review_data_modified)
-  
   print "DONE"  
   
