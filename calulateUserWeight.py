@@ -44,13 +44,13 @@ def putZeros(x):
 # total number of pages
 n = 366815
 # number of groups
-g = 24
+g = 3
 # v' = bMv + (1-b)e/n
 b = float(0.8)
 # (1-b)/n
 c = (1-b)/n
 # number of multiplication for convergence
-nmc = 40
+nmc = 10
 # number that divide the i and j to decide the group. n/g needs to be round up
 divider = int(ceil(float(n)/g))
 
@@ -71,48 +71,204 @@ transitionMatrix = matrix.map(lambda (k,v): ((k[0]/divider,k[1]/divider,k[1]),(k
 vec = sc.parallelize(xrange(0,n)).map(lambda x: (x,float(1)/n)).cache()
 
 
+
+# #((GroupI, GroupJ, j), vj)
+# tempVec = vec.flatMap(lambda (k,v): map(lambda I: ((I,k/divider,k),v),range(0,g)))
+# #((GroupI, GroupJ, j), ((i,mij),vj) ) -> (i, mij * vj) -> sum by key : (i, v'j) -> rightOuterJoin: (i, (v'j, vj)) -> map(putZeros): (i,(b*v'j+c, vj)), this also fill empty element with 0.
+# tempVec = transitionMatrix.join(tempVec).map(lambda (k,v): (v[0][0],v[0][1]*v[1])).reduceByKey(add).rightOuterJoin(vec).map(putZeros)
+# # calculate norm of difference between previous iteration. |x|=sqrt(x_1^2+x_2^2+...+x_n^2).
+# diff = sqrt(tempVec.map(lambda (k,v): pow(v[0]-v[1],2)).sum())
+# ListOfDiff.append(diff)
+# # get rid of the previous vector
+# vec.unpersist()
+# # then replace with new one. -> (k, v)
+# vec = tempVec.map(lambda (k,v): (k,v[0])).cache()
+# count += 1
+
 #((GroupI, GroupJ, j), vj)
 tempVec = vec.flatMap(lambda (k,v): map(lambda I: ((I,k/divider,k),v),range(0,g)))
-
 #((GroupI, GroupJ, j), ((i,mij),vj) ) -> (i, mij * vj) -> sum by key : (i, v'j) -> rightOuterJoin: (i, (v'j, vj)) -> map(putZeros): (i,(b*v'j+c, vj)), this also fill empty element with 0.
 tempVec = transitionMatrix.join(tempVec).map(lambda (k,v): (v[0][0],v[0][1]*v[1])).reduceByKey(add).rightOuterJoin(vec).map(putZeros)
-
-# calculate difference between previous iteration.
+# calculate norm of difference between previous iteration. |x|=sqrt(x_1^2+x_2^2+...+x_n^2).
 diff = sqrt(tempVec.map(lambda (k,v): pow(v[0]-v[1],2)).sum())
-
+ListOfDiff.append(diff)
 # get rid of the previous vector
 vec.unpersist()
-
 # then replace with new one. -> (k, v)
 vec = tempVec.map(lambda (k,v): (k,v[0])).cache()
+tempVec.unpersist()
+count += 1
+
+
+
+#((GroupI, GroupJ, j), vj)
+tempVec = vec.flatMap(lambda (k,v): map(lambda I: ((I,k/divider,k),v),range(0,g)))
+#((GroupI, GroupJ, j), ((i,mij),vj) ) -> (i, mij * vj) -> sum by key : (i, v'j) -> rightOuterJoin: (i, (v'j, vj)) -> map(putZeros): (i,(b*v'j+c, vj)), this also fill empty element with 0.
+tempVec = transitionMatrix.join(tempVec).map(lambda (k,v): (v[0][0],v[0][1]*v[1])).reduceByKey(add).rightOuterJoin(vec).map(putZeros)
+# calculate norm of difference between previous iteration. |x|=sqrt(x_1^2+x_2^2+...+x_n^2).
+diff = sqrt(tempVec.map(lambda (k,v): pow(v[0]-v[1],2)).sum())
+ListOfDiff.append(diff)
+# get rid of the previous vector
+vec.unpersist()
+# then replace with new one. -> (k, v)
+vec = tempVec.map(lambda (k,v): (k,v[0])).cache()
+tempVec.unpersist()
+count += 1
+
+
+
+#((GroupI, GroupJ, j), vj)
+tempVec = vec.flatMap(lambda (k,v): map(lambda I: ((I,k/divider,k),v),range(0,g)))
+#((GroupI, GroupJ, j), ((i,mij),vj) ) -> (i, mij * vj) -> sum by key : (i, v'j) -> rightOuterJoin: (i, (v'j, vj)) -> map(putZeros): (i,(b*v'j+c, vj)), this also fill empty element with 0.
+tempVec = transitionMatrix.join(tempVec).map(lambda (k,v): (v[0][0],v[0][1]*v[1])).reduceByKey(add).rightOuterJoin(vec).map(putZeros)
+# calculate norm of difference between previous iteration. |x|=sqrt(x_1^2+x_2^2+...+x_n^2).
+diff = sqrt(tempVec.map(lambda (k,v): pow(v[0]-v[1],2)).sum())
+ListOfDiff.append(diff)
+# get rid of the previous vector
+vec.unpersist()
+# then replace with new one. -> (k, v)
+vec = tempVec.map(lambda (k,v): (k,v[0])).cache()
+tempVec.unpersist()
+count += 1
+
+
+
+#((GroupI, GroupJ, j), vj)
+tempVec = vec.flatMap(lambda (k,v): map(lambda I: ((I,k/divider,k),v),range(0,g)))
+#((GroupI, GroupJ, j), ((i,mij),vj) ) -> (i, mij * vj) -> sum by key : (i, v'j) -> rightOuterJoin: (i, (v'j, vj)) -> map(putZeros): (i,(b*v'j+c, vj)), this also fill empty element with 0.
+tempVec = transitionMatrix.join(tempVec).map(lambda (k,v): (v[0][0],v[0][1]*v[1])).reduceByKey(add).rightOuterJoin(vec).map(putZeros)
+# calculate norm of difference between previous iteration. |x|=sqrt(x_1^2+x_2^2+...+x_n^2).
+diff = sqrt(tempVec.map(lambda (k,v): pow(v[0]-v[1],2)).sum())
+ListOfDiff.append(diff)
+# get rid of the previous vector
+vec.unpersist()
+# then replace with new one. -> (k, v)
+vec = tempVec.map(lambda (k,v): (k,v[0])).cache()
+tempVec.unpersist()
+count += 1
+
+
+
+#((GroupI, GroupJ, j), vj)
+tempVec = vec.flatMap(lambda (k,v): map(lambda I: ((I,k/divider,k),v),range(0,g)))
+#((GroupI, GroupJ, j), ((i,mij),vj) ) -> (i, mij * vj) -> sum by key : (i, v'j) -> rightOuterJoin: (i, (v'j, vj)) -> map(putZeros): (i,(b*v'j+c, vj)), this also fill empty element with 0.
+tempVec = transitionMatrix.join(tempVec).map(lambda (k,v): (v[0][0],v[0][1]*v[1])).reduceByKey(add).rightOuterJoin(vec).map(putZeros)
+# calculate norm of difference between previous iteration. |x|=sqrt(x_1^2+x_2^2+...+x_n^2).
+diff = sqrt(tempVec.map(lambda (k,v): pow(v[0]-v[1],2)).sum())
+ListOfDiff.append(diff)
+# get rid of the previous vector
+vec.unpersist()
+# then replace with new one. -> (k, v)
+vec = tempVec.map(lambda (k,v): (k,v[0])).cache()
+tempVec.unpersist()
+count += 1
+
+
+
+#((GroupI, GroupJ, j), vj)
+tempVec = vec.flatMap(lambda (k,v): map(lambda I: ((I,k/divider,k),v),range(0,g)))
+#((GroupI, GroupJ, j), ((i,mij),vj) ) -> (i, mij * vj) -> sum by key : (i, v'j) -> rightOuterJoin: (i, (v'j, vj)) -> map(putZeros): (i,(b*v'j+c, vj)), this also fill empty element with 0.
+tempVec = transitionMatrix.join(tempVec).map(lambda (k,v): (v[0][0],v[0][1]*v[1])).reduceByKey(add).rightOuterJoin(vec).map(putZeros)
+# calculate norm of difference between previous iteration. |x|=sqrt(x_1^2+x_2^2+...+x_n^2).
+diff = sqrt(tempVec.map(lambda (k,v): pow(v[0]-v[1],2)).sum())
+ListOfDiff.append(diff)
+# get rid of the previous vector
+vec.unpersist()
+# then replace with new one. -> (k, v)
+vec = tempVec.map(lambda (k,v): (k,v[0])).cache()
+tempVec.unpersist()
+count += 1
+
+
+
+#((GroupI, GroupJ, j), vj)
+tempVec = vec.flatMap(lambda (k,v): map(lambda I: ((I,k/divider,k),v),range(0,g)))
+#((GroupI, GroupJ, j), ((i,mij),vj) ) -> (i, mij * vj) -> sum by key : (i, v'j) -> rightOuterJoin: (i, (v'j, vj)) -> map(putZeros): (i,(b*v'j+c, vj)), this also fill empty element with 0.
+tempVec = transitionMatrix.join(tempVec).map(lambda (k,v): (v[0][0],v[0][1]*v[1])).reduceByKey(add).rightOuterJoin(vec).map(putZeros)
+# calculate norm of difference between previous iteration. |x|=sqrt(x_1^2+x_2^2+...+x_n^2).
+diff = sqrt(tempVec.map(lambda (k,v): pow(v[0]-v[1],2)).sum())
+ListOfDiff.append(diff)
+# get rid of the previous vector
+vec.unpersist()
+# then replace with new one. -> (k, v)
+vec = tempVec.map(lambda (k,v): (k,v[0])).cache()
+tempVec.unpersist()
+count += 1
+
+
+
+#((GroupI, GroupJ, j), vj)
+tempVec = vec.flatMap(lambda (k,v): map(lambda I: ((I,k/divider,k),v),range(0,g)))
+#((GroupI, GroupJ, j), ((i,mij),vj) ) -> (i, mij * vj) -> sum by key : (i, v'j) -> rightOuterJoin: (i, (v'j, vj)) -> map(putZeros): (i,(b*v'j+c, vj)), this also fill empty element with 0.
+tempVec = transitionMatrix.join(tempVec).map(lambda (k,v): (v[0][0],v[0][1]*v[1])).reduceByKey(add).rightOuterJoin(vec).map(putZeros)
+# calculate norm of difference between previous iteration. |x|=sqrt(x_1^2+x_2^2+...+x_n^2).
+diff = sqrt(tempVec.map(lambda (k,v): pow(v[0]-v[1],2)).sum())
+ListOfDiff.append(diff)
+# get rid of the previous vector
+vec.unpersist()
+# then replace with new one. -> (k, v)
+vec = tempVec.map(lambda (k,v): (k,v[0])).cache()
+tempVec.unpersist()
+count += 1
+
+
+
+#((GroupI, GroupJ, j), vj)
+tempVec = vec.flatMap(lambda (k,v): map(lambda I: ((I,k/divider,k),v),range(0,g)))
+#((GroupI, GroupJ, j), ((i,mij),vj) ) -> (i, mij * vj) -> sum by key : (i, v'j) -> rightOuterJoin: (i, (v'j, vj)) -> map(putZeros): (i,(b*v'j+c, vj)), this also fill empty element with 0.
+tempVec = transitionMatrix.join(tempVec).map(lambda (k,v): (v[0][0],v[0][1]*v[1])).reduceByKey(add).rightOuterJoin(vec).map(putZeros)
+# calculate norm of difference between previous iteration. |x|=sqrt(x_1^2+x_2^2+...+x_n^2).
+diff = sqrt(tempVec.map(lambda (k,v): pow(v[0]-v[1],2)).sum())
+ListOfDiff.append(diff)
+# get rid of the previous vector
+vec.unpersist()
+# then replace with new one. -> (k, v)
+vec = tempVec.map(lambda (k,v): (k,v[0])).cache()
+tempVec.unpersist()
+count += 1
+
+
+
+#((GroupI, GroupJ, j), vj)
+tempVec = vec.flatMap(lambda (k,v): map(lambda I: ((I,k/divider,k),v),range(0,g)))
+#((GroupI, GroupJ, j), ((i,mij),vj) ) -> (i, mij * vj) -> sum by key : (i, v'j) -> rightOuterJoin: (i, (v'j, vj)) -> map(putZeros): (i,(b*v'j+c, vj)), this also fill empty element with 0.
+tempVec = transitionMatrix.join(tempVec).map(lambda (k,v): (v[0][0],v[0][1]*v[1])).reduceByKey(add).rightOuterJoin(vec).map(putZeros)
+# calculate norm of difference between previous iteration. |x|=sqrt(x_1^2+x_2^2+...+x_n^2).
+diff = sqrt(tempVec.map(lambda (k,v): pow(v[0]-v[1],2)).sum())
+ListOfDiff.append(diff)
+# get rid of the previous vector
+vec.unpersist()
+# then replace with new one. -> (k, v)
+vec = tempVec.map(lambda (k,v): (k,v[0])).cache()
+tempVec.unpersist()
+count += 1
+
+
+
+vec.saveAsSequenceFile("/user/u0343930/YelpProject/FinalUserWeight")
+
+
+
 
 
 # In practice, for the Web itself, 50–75 iterations are sufficient to converge to within the error limits of double-precision arithmetic.
 count = 0
 for i in range(0,nmc):
-	#(i, 1/n)
-	vec = sc.parallelize(xrange(0,n)).map(lambda x: (x,float(1)/n)).cache()
-
 	#((GroupI, GroupJ, j), vj)
 	tempVec = vec.flatMap(lambda (k,v): map(lambda I: ((I,k/divider,k),v),range(0,g)))
-
 	#((GroupI, GroupJ, j), ((i,mij),vj) ) -> (i, mij * vj) -> sum by key : (i, v'j) -> rightOuterJoin: (i, (v'j, vj)) -> map(putZeros): (i,(b*v'j+c, vj)), this also fill empty element with 0.
 	tempVec = transitionMatrix.join(tempVec).map(lambda (k,v): (v[0][0],v[0][1]*v[1])).reduceByKey(add).rightOuterJoin(vec).map(putZeros)
-
 	# calculate norm of difference between previous iteration. |x|=sqrt(x_1^2+x_2^2+...+x_n^2).
 	diff = sqrt(tempVec.map(lambda (k,v): pow(v[0]-v[1],2)).sum())
-
 	ListOfDiff.append(diff)
-	
 	# get rid of the previous vector
 	vec.unpersist()
-
 	# then replace with new one. -> (k, v)
 	vec = tempVec.map(lambda (k,v): (k,v[0])).cache()
-	
+	tempVec.unpersist()
 	count += 1
 
-diff = 1
+vec.saveAsSequenceFile("/user/u0343930/YelpProject/FinalUserWeight")
 
 while (diff > .000000001):
 	#(i, 1/n)
@@ -138,7 +294,20 @@ while (diff > .000000001):
 	count += 1
 
 
-print "number of multiplication was" + count + "\n"
+
+#(0, u'18kPq7GPye-YQ3LyKyAZPw')
+def prepareUser (st):
+	st1 = re.split('[(, \')]', st)
+	st2 = filter (None, st1)
+	return (int(st2[0]), st2[2])
+
+user1 = sc.textFile('/user/u0343930/YelpProject/Iteration_userID/part-00000')
+user2 = sc.textFile('/user/u0343930/YelpProject/Iteration_userID/part-00001')
+user = sc.union([user1,user2]).map(prepareUser)
+userWeight = user.join(vec).map(lambda (k,v): (v[1],v[0]))
+
+#(136391, 3.0190093512443715e-06)
+
 
 vec.sortBy(lambda (k,v):k).map(lambda (k,v): str(k)+" "+str(v)).saveAsTextFile('data/UserWeight')
 #v.sortBy(lambda (k,v):k).map(lambda (k,v): str(k)+" "+str(v)).saveAsTextFile('/user/u0343930/YelpProject/UserWeight')

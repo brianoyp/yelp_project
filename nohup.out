@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "getVector.py", line 1, in <module>
+    from pyspark import SparkContext
+ImportError: No module named pyspark
+nohup: getVector.py: No such file or directory
+nohup: getVector.py: No such file or directory
+nohup: getVector.py: No such file or directory

@@ -18,7 +18,6 @@ def prepare (st):
 rdd = sc.textFile('/user/u0343930/YelpProject/TransitionMatrix/test')
 
 
-
 # matrix = ((i,j),mij)  * i is the user# that gets useful vote, j is the user# who gave useful vote, mij is 1/degree
 matrix = rdd.map(prepare)
 
@@ -40,7 +39,6 @@ transitionMatrix = matrix.map(lambda (k,v): ((k[0]/divider,k[1]/divider,k[1]),(k
 
 # initial v -> (j, 1/n)
 v = sc.parallelize(xrange(0,n)).map(lambda x: (x,float(1)/n))
-
 
 for i in range(0,nmc):
 	v = v.flatMap(lambda (k,v): map(lambda I: ((I,k/divider,k),v),range(0,g)))
