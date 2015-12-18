@@ -15,11 +15,12 @@ business_data = yelp_data_home + "/yelp_academic_dataset_business.json"
 #review_data_modified = '_modified'
 #review_data_modified = '_modified_userWeight'
 #review_data_modified = '_userWeight'
-#review_data = yelp_data_home + "/yelp_academic_dataset_review.json"
+review_data = yelp_data_home + "/yelp_academic_dataset_review.json"
 #review_data = yelp_data_home + "/yelp_academic_dataset_review_modified.json"
 # used from TEST DATA
 #user_data = "/home/derekn/CS6965/yelp_dataset_challenge_academic_dataset/dummy/user_data/*"
 #user_data = yelp_data_home + "/userWeight/*"
+user_data = yelp_data_home + "/yelp_academic_dataset_user.json"
 #############################################################################################################
 
 # Establish Environment for PYSPARK
@@ -52,6 +53,13 @@ try: # import OPERATOR/REGEX
   print("Successfully imported OPERATOR Modules")
   import re
   print("Successfully imported REGEX Modules")
+  from pylab import *
+  from optparse import OptionParser
+  import matplotlib as mpl
+  mpl.use('Agg')
+  import matplotlib.pyplot as plt
+  import matplotlib.image as mpimg
+  print("Successfully imported Matplotlib")
 except ImportError as e:
   print ("Cannot import OPERATOR/REGEX Modules", e)
   sys.exit(1)
@@ -82,6 +90,47 @@ def clean_business(data):
   d = json.loads(data)
   return ( d['business_id'], d['name'], d['categories'], d['stars'], d['city'], d['state'], d['review_count'] )
 
+def clean_review(data):
+  # data =
+  #   {
+  #     "votes": {"fun...},
+  #     "user_id": "Xqd...",
+  #     "review_id": "15S...",
+  #     "stars": 5,
+  #     "date": "2007-05-17",
+  #     "text": "dr. gol...",
+  #     "type": "review",
+  #     "business_id": "vcN..."
+  #   }
+  # returns = 
+  #   ( review_id, user_id, stars, date, business_id )
+  # Access By:
+  #   x[0] = review_id
+  d = json.loads(data)
+  return ( d['review_id'], d['user_id'], d['stars'], d['date'], d['business_id'] )
+
+def clean_user(data):
+  # data =
+  #   {
+  #     "yelping_since": "2004-10",
+  #     "votes": {"fun...},
+  #     "review_count": 108,
+  #     "name": "Russel",
+  #     "user_id": "18k...",
+  #     "friends": ["rpO..., ...T4g"],
+  #     "fans": 69,
+  #     "average_stars": 4.1399999999999997,
+  #     "type": "user",
+  #     "compliments": {"pro...},
+  #     "elite": [2005, 2006]
+  #   }
+  # returns =
+  #   ( user_id, 1 )
+  # Access By:
+  #   x[0] = user_id
+  d = json.loads(data)
+  return ( d['user_id'], 1 )
+
 if __name__ == '__main__':
 
   conf = SparkConf()
@@ -92,19 +141,39 @@ if __name__ == '__main__':
   print "START"
 
   businessData = sc.textFile(business_data).map(lambda x: clean_business(x))
+  reviewData = sc.textFile(review_data).map(lambda x: clean_review(x))
+  userData = sc.textFile(user_data).map(lambda x: clean_user(x))
 
   # States
-  states = businessData.map(lambda x: (x[5], 1) )\
-    .reduceByKey(add) \
-    .collect()
-  print "####### States"
-  print states
+  #states = businessData.map(lambda x: (x[5], 1) )\
+  #  .reduceByKey(add)
+  #stateKey = states.keys()
+  #stateValue = states.values()
+  #states.collect()
+  #print "####### States"
+  #print states
 
-  maxReviews = businessData.map(lambda x: x[6]).max()
-  minReviews = businessData.map(lambda x: x[6]).min()
-  print " ### MAX REVIEWS"
-  print maxReviews
-  print " ### MIN REVIEWS"
-  print minReviews
+  #cities = businessData.map(lambda x: x[4] + ", " + x[5]).distinct()
+  #print "####### Cities"
+  #print cities.count()
+
+  #maxReviews = businessData.map(lambda x: x[6]).max()
+  #minReviews = businessData.map(lambda x: x[6]).min()
+  #print " ### MAX REVIEWS"
+  #print maxReviews
+  #print " ### MIN REVIEWS"
+  #print minReviews
+
+  businessCount = businessData.map(lambda x: x[0]).distinct().count()
+  reviewCount = reviewData.map(lambda x: x[0]).distinct().count()
+  userCount = userData.map(lambda x: x[0]).distinct().count()
+
+  print "###### Business Count"
+  print businessCount
+  print "###### Review Count"
+  print reviewCount
+  print "###### User Count"
+  print userCount
+
 
   print "Done"

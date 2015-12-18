@@ -53,8 +53,8 @@ if __name__ == '__main__':
   print "START"
   
   print not False
-  #userData = sc.sequenceFile(yelp_data_home + "/uwFullModified/*")
-  #print userData.take(5)    
+  userData = sc.sequenceFile(yelp_data_home + "/uwUnModified/*")
+  print userData.take(5)    
 
   print "DONE"  
   

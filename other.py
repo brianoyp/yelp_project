@@ -73,7 +73,11 @@ def clean_business(data):
   # Access By:
   #   x[0] = business_id
   d = json.loads(data)
-  return ( d['business_id'], d['name'], d['categories'], d['stars'], d['city'], d['state'], d['review_count'] )
+  if ((d['business_id'] == "-sV52FN-D-I808tyRPEvwg") and ('modified' in review_data_modified)):
+    reviewCount = d['review_count'] + 100
+  else:
+    reviewCount = d['review_count']
+  return ( d['business_id'], d['name'], d['categories'], d['stars'], d['city'], d['state'], reviewCount )
 
 def clean_review(data):
   # data =
@@ -124,40 +128,65 @@ if __name__ == '__main__':
   sc = SparkContext("local", "Simple App")
 
   print "START"
+  doneFlag = False
+  iteration = 0
 
-  businessData = sc.textFile(business_data).map(lambda x: clean_business(x))
-  businessInfo = businessData.map(lambda x: (x[0], x[6]) )
-  businessCount = businessData.count()
+  while(not doneFlag):
+    if(iteration == 0):
+      review_data_modified = ''
+      review_data = yelp_data_home + "/yelp_academic_dataset_review.json"
+      user_data = yelp_data_home + "/yelp_academic_dataset_user.json"
+    if(iteration == 1):
+      review_data_modified = '_modified'
+      review_data = yelp_data_home + "/yelp_academic_dataset_review_modified.json"
+      user_data = yelp_data_home + "/yelp_academic_dataset_user_modified.json"
+    if(iteration == 2):
+      review_data_modified = '_un_modified'
+      review_data = yelp_data_home + "/yelp_academic_dataset_review_modified.json"
+      user_data = yelp_data_home + "/yelp_academic_dataset_user_un_modified.json"
+      doneFlag = True
 
-  reviewData = sc.textFile(review_data).map(lambda x: clean_review(x))
-  reviewCount = reviewData.count()
+    businessData = sc.textFile(business_data).map(lambda x: clean_business(x))
+    businessInfo = businessData.map(lambda x: (x[0], x[6]) )
+    businessCount = businessData.count()
 
-  userData = sc.textFile(user_data).map(lambda x: clean_user(x))
-  totalUseful = userData.map(lambda x: x[1]).sum()
-  userCount = userData.count()
+    reviewData = sc.textFile(review_data).map(lambda x: clean_review(x))
+    reviewCount = reviewData.count()
 
-  BR1 = reviewData.map(lambda x: (x[4], x[2]) ) \
-    .reduceByKey(add) \
-    .join(businessInfo) \
-    .map(lambda (businessID, data): (businessID, float(data[0])/float(data[1])) )
-  BR1count = BR1.count()
-  BR1.saveAsSequenceFile(yelp_data_home + "/BR1")
+    userData = sc.textFile(user_data).map(lambda x: clean_user(x))
+    totalUseful = userData.map(lambda x: x[1]).sum()
+    userCount = userData.count()
 
-  BR2 = reviewData.map(lambda x: (x[1], (x[4], x[2])) ) \
-    .join(userData) \
-    .map(lambda (userID, data): (data[0][0], (data[0][1] - 3) * (float(data[1])/float(totalUseful))) ) \
-    .reduceByKey(add) \
-    .join(businessInfo) \
-    .map(lambda (businessID, data): (businessID, float(data[0])/float(data[1])) )
-  BR2count = BR2.count()
-  BR2.saveAsSequenceFile(yelp_data_home + "/BR2")
+    BR1 = reviewData.map(lambda x: (x[4], x[2]) ) \
+      .reduceByKey(add) \
+      .join(businessInfo) \
+      .map(lambda (businessID, data): (businessID, float(data[0])/float(data[1])) )
+    BR1count = BR1.count()
+    BR1.saveAsSequenceFile(yelp_data_home + "/BR1" + review_data_modified)
 
-  print "#########################################################################"
-  print ("   BusinessCount = " + str(businessCount))
-  print ("   ReviewCount =   " + str(reviewCount))
-  print ("   UserCount =     " + str(userCount))
-  print ("   BR1 count =     " + str(BR1count))
-  print ("   BR2 count =     " + str(BR2count))
-  print "#########################################################################"
+    BR2 = reviewData.map(lambda x: (x[1], (x[4], x[2])) ) \
+      .join(userData) \
+      .map(lambda (userID, data): (data[0][0], (data[0][1] - 3) * (float(data[1])/float(totalUseful))) ) \
+      .reduceByKey(add) \
+      .join(businessInfo) \
+      .map(lambda (businessID, data): (businessID, float(data[0])/float(data[1])) )
+    BR2count = BR2.count()
+    BR2.saveAsSequenceFile(yelp_data_home + "/BR2" + review_data_modified)
+    
+    f = open(yelp_data_home + "/output_other.out", "a")
+    output = ""
+    output = output + "#########################################################################" + "\n"
+    output = output + "   BusinessCount = " + str(businessCount) + "\n"
+    output = output + "   ReviewCount =   " + str(reviewCount) + "\n"
+    output = output + "   UserCount =     " + str(userCount) + "\n"
+    output = output + "   BR1 count =     " + str(BR1count) + "\n"
+    output = output + "   BR2 count =     " + str(BR2count) + "\n"
+    output = output + "#########################################################################" + "\n"
+    output = output + "iteration = " + str(iteration) + "\n"
+    f.write(output)
+    f.close()
+    print output
+    iteration = iteration + 1
+
   print "DONE"  
   

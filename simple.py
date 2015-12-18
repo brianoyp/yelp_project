@@ -157,12 +157,12 @@ def advantageRate(reviewCount):
   # Advantage Constant = 0.0001
   return 1 + log(reviewCount)
 
-def individualReviewScore(MRS_DR, total_number_reviews, advantage_rate):
+def individualReviewScore(MRS, total_number_reviews):
   # modified_review_score = modifiedReviewScore
   # depreciation_rate = depreciationRate
   # total_number_reviews = total number of reviews for that business
   # advantage_rate = advantageRate
-  return ((MRS_DR) / total_number_reviews) * advantage_rate
+  return MRS / total_number_reviews
 
 def get_data(text):
   # Expected:
@@ -208,27 +208,27 @@ if __name__ == '__main__':
 
   while(not doneFlag):
     if(iteration == 0):
-      review_data_modified = '_one'
+      review_data_modified = '_simple_one'
       review_data = yelp_data_home + "/yelp_academic_dataset_review.json"
       user_data = yelp_data_home + "/dummy/user_data/*" # used from TEST DATA
     if(iteration == 1):
-      review_data_modified = '_modified_one'
+      review_data_modified = '_simple_modified_one'
       review_data = yelp_data_home + "/yelp_academic_dataset_review_modified.json"
       user_data = yelp_data_home + "/dummy/user_data_mod/*" # used from TEST DATA
     if(iteration == 2):
-      review_data_modified = '_modified_uw_Mod'
+      review_data_modified = '_simple_modified_uw_Mod'
       review_data = yelp_data_home + "/yelp_academic_dataset_review_modified.json"
       user_data = yelp_data_home + "/uwModified/*"
     if(iteration == 3):
-      review_data_modified = '_uw_Mod'
+      review_data_modified = '_simple_uw_Mod'
       review_data = yelp_data_home + "/yelp_academic_dataset_review.json"
       user_data = yelp_data_home + "/uwModified/*"
     if(iteration == 4):
-      review_data_modified = '_modified_uw_unMod'
+      review_data_modified = '_simple_modified_uw_unMod'
       review_data = yelp_data_home + "/yelp_academic_dataset_review_modified.json"
       user_data = yelp_data_home + "/uwUnModified/*"
     if(iteration == 5):
-      review_data_modified = '_uw_unMod'
+      review_data_modified = '_simple_uw_unMod'
       review_data = yelp_data_home + "/yelp_academic_dataset_review.json"
       user_data = yelp_data_home + "/uwUnModified/*"
       doneFlag = True
@@ -242,7 +242,7 @@ if __name__ == '__main__':
         .flatMap(lambda x: x.split("\n")) \
         .map(lambda x: get_data(x))
       userCount = userData.count()
-
+    
     businessData = sc.textFile(business_data).map(lambda x: clean_business(x))
     businessInfo = businessData.map(lambda x: (x[0], (x[6], advantageRate(x[6]))))
     businessCount = businessInfo.count()
@@ -250,14 +250,14 @@ if __name__ == '__main__':
     reviewData = sc.textFile(review_data).map(lambda x: clean_review(x))
     reviewUserData = reviewData.map(lambda x: (x[1], (x[2], x[3], x[4])) ).join(userData)
 
-    MRSandDR = reviewUserData \
-      .map(lambda (userId, data): (data[0][2], modifiedReviewScore(data[1], data[0][0]) * depreciationRate(data[0][1])) ) \
+    MRS = reviewUserData \
+      .map(lambda (userId, data): (data[0][2], modifiedReviewScore(data[1], data[0][0])) ) \
       .reduceByKey(add)
-    MRSandDRcount = MRSandDR.count()
-    MRSandDRandBI = MRSandDR.join(businessInfo)
-    MRSandDRandBIcount = MRSandDRandBI.count()
-    reviewScore = MRSandDRandBI \
-      .map(lambda (businessID, data): (businessID, individualReviewScore(data[0], data[1][0], data[1][1])))
+    MRScount = MRS.count()
+    MRSandBI = MRS.join(businessInfo)
+    MRSandBIcount = MRSandBI.count()
+    reviewScore = MRSandBI \
+      .map(lambda (businessID, data): (businessID, individualReviewScore(data[0], data[1][0])))
     reviewScoreCount = reviewScore.count()
   
     #print "#########################################################################"
@@ -272,7 +272,7 @@ if __name__ == '__main__':
     # Store Review Score to Disk after run
     reviewScore.saveAsSequenceFile(yelp_data_home + "/review_score" + review_data_modified)
     
-    f = open(yelp_data_home + "/output_extractData.out", "a")
+    f = open(yelp_data_home + "/output_simple.out", "a")
     output = ""
     output = output + "#########################################################################" + "\n"
     output = output + "   BusinessCount =       " + str(businessCount) + "\n"
@@ -280,8 +280,8 @@ if __name__ == '__main__':
     output = output + "   UserCount =           " + str(userCount) + "\n"
     output = output + "   ReviewBusinessCount = " + str(reviewBusinessCount) + "\n"
     output = output + "   ReviewUserCount =     " + str(reviewUserCount) + "\n"
-    output = output + "   MRSandDRcount =       " + str(MRSandDRcount) + "\n"
-    output = output + "   MRSandDRandBIcount =  " + str(MRSandDRandBIcount) + "\n"
+    output = output + "   MRScount =            " + str(MRScount) + "\n"
+    output = output + "   MRSandBIcount =       " + str(MRSandBIcount) + "\n"
     output = output + "   ReviewScoreCount =    " + str(reviewScoreCount) + "\n"
     output = output + "#########################################################################" + "\n"
     output = output + "iteration = " + str(iteration) + "\n"

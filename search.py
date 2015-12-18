@@ -19,12 +19,23 @@ business_data = yelp_data_home + "/yelp_academic_dataset_business.json"
 # If review data contains modified data
 #review_data_modified = ''
 #review_data_modified = '_modified'
-#review_data_modified = '_modified_userWeight'
-review_data_modified = '_userWeight'
+review_data_modified = '_un_modified'
+#review_data_modified = '_one'
+#review_data_modified = '_modified_one'
+#review_data_modified = '_modified_uw_Mod'
+#review_data_modified = '_uw_Mod'
+#review_data_modified = '_modified_uw_unMod'
+#review_data_modified = '_uw_unMod'
+#review_data_modified = '_simple_one'
+#review_data_modified = '_simple_modified_one'
+#review_data_modified = '_simple_modified_uw_Mod'
+#review_data_modified = '_simple_uw_Mod'
+#review_data_modified = '_simple_modified_uw_unMod'
+#review_data_modified = '_simple_uw_unMod'
 #review_score_data = yelp_data_home + "/review_score" + review_data_modified + "/*"
-review_score_data = yelp_data_home + "/secondEquationSeq/review_score" + review_data_modified + "/*"
-#review_score_data = yelp_data_home + "/BR1/*"
-#review_score_data = yelp_data_home + "/BR2/*"
+##review_score_data = yelp_data_home + "/secondEquationSeq/review_score" + review_data_modified + "/*"
+#review_score_data = yelp_data_home + "/BR1" + review_data_modified + "/*"
+review_score_data = yelp_data_home + "/BR2" + review_data_modified + "/*"
 #############################################################################################################
 
 # Establish Environment for PYSPARK
@@ -170,6 +181,7 @@ if __name__ == '__main__':
   print "#########################################################################"
   print "                   Top 5 Business Given By Algorithm                     "
   print business
+  print review_score_data
   print "#########################################################################"
   
   print "#########################################################################"
