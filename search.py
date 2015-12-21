@@ -17,9 +17,9 @@ spark_home = os.environ.get('SPARK_HOME', None)
 yelp_data_home = "/home/derekn/CS6965/yelp_dataset_challenge_academic_dataset"
 business_data = yelp_data_home + "/yelp_academic_dataset_business.json"
 # If review data contains modified data
-#review_data_modified = ''
-#review_data_modified = '_modified'
-review_data_modified = '_un_modified'
+#review_data_modified = '' # use with BR1 and BR2
+#review_data_modified = '_modified' # use with BR1_modified and BR2_modified
+#review_data_modified = '_un_modified' 
 #review_data_modified = '_one'
 #review_data_modified = '_modified_one'
 #review_data_modified = '_modified_uw_Mod'
@@ -31,7 +31,7 @@ review_data_modified = '_un_modified'
 #review_data_modified = '_simple_modified_uw_Mod'
 #review_data_modified = '_simple_uw_Mod'
 #review_data_modified = '_simple_modified_uw_unMod'
-#review_data_modified = '_simple_uw_unMod'
+review_data_modified = '_simple_uw_unMod'
 #review_score_data = yelp_data_home + "/review_score" + review_data_modified + "/*"
 ##review_score_data = yelp_data_home + "/secondEquationSeq/review_score" + review_data_modified + "/*"
 #review_score_data = yelp_data_home + "/BR1" + review_data_modified + "/*"
@@ -56,6 +56,12 @@ try: # import JSON
   print("Successfully imported JSON Modules")
 except ImportError as e:
   print ("Cannot import JSON Modules", e)
+  sys.exit(1)
+try: # import DATETIME
+  from datetime import datetime
+  print("Successfully imported DATETIME Modules")
+except ImportError as e:
+  print ("Cannot import DATETIME Modules", e)
   sys.exit(1)
 try: # import REGEX
   import re
@@ -146,9 +152,7 @@ if __name__ == '__main__':
   sc = SparkContext("local", "Simple App")
 
   print "START"
-  businessData = sc.textFile(business_data).map(lambda x: clean_business(x))
-  businessCount = businessData.count()
-
+  
   #businessSearch = businessData \
   #  .filter(lambda x: filter_by_state('NV', x[5])) \
   #  .filter(lambda x: filter_by_city('Las Vegas', x[4])) \
@@ -159,35 +163,145 @@ if __name__ == '__main__':
   #print businessSearch
   #sys.exit(1)
 
-  reviewScore = sc.sequenceFile(review_score_data)
-  reviewScoreCount = reviewScore.count()
+  doneFlag = False
+  iteration = 0
 
-  def print_business(data):
-    print data
+  while(not doneFlag):
+    if(iteration == 0):
+      # BR1 unmodified user and review data
+      # iteration 0
+      review_data_modified = ''
+      review_score_data = yelp_data_home + "/BR1" + review_data_modified + "/*"
+    if(iteration == 1):
+      # BR2 unmodified user and review data
+      # iteration 0
+      review_data_modified = ''
+      review_score_data = yelp_data_home + "/BR2" + review_data_modified + "/*"
+    if(iteration == 2):
+      # BR1_modified spam farming
+      # iteration 1
+      review_data_modified = '_modified'
+      review_score_data = yelp_data_home + "/BR1" + review_data_modified + "/*"
+    if(iteration == 3):
+      # BR2_modified spam farming
+      # iteration 1
+      review_data_modified = '_modified'
+      review_score_data = yelp_data_home + "/BR2" + review_data_modified + "/*"
+    if(iteration == 4):
+      # BR1_unMod farming
+      # ** users added but no useful votes
+      # ** reviews added
+      # iteration 2
+      review_data_modified = '_un_modified'
+      review_score_data = yelp_data_home + "/BR1" + review_data_modified + "/*"
+    if(iteration == 5):
+      # BR2_unMod farming
+      # ** users added but no useful votes
+      # ** reviews added
+      # iteration 2
+      review_data_modified = '_un_modified'
+      review_score_data = yelp_data_home + "/BR2" + review_data_modified + "/*"
+    if(iteration == 6):
+      # review_score_one
+      # iteration 0
+      review_data_modified = '_one'
+      review_score_data = yelp_data_home + "/review_score" + review_data_modified + "/*"
+    if(iteration == 7):
+      # review_score_modified_one
+      # iteration 1
+      review_data_modified = '_modified_one'
+      review_score_data = yelp_data_home + "/review_score" + review_data_modified + "/*"
+    if(iteration == 8):
+      # review_score_modified_uw_Mod
+      # iteration 2
+      review_data_modified = '_modified_uw_Mod'
+      review_score_data = yelp_data_home + "/review_score" + review_data_modified + "/*"
+    if(iteration == 9):
+      # review_score_uw_Mod
+      # iteration 3
+      review_data_modified = '_uw_Mod'
+      review_score_data = yelp_data_home + "/review_score" + review_data_modified + "/*"
+    if(iteration == 10):
+      # review_score_modified_uw_unMod
+      # iteration 4
+      review_data_modified = '_modified_uw_unMod'
+      review_score_data = yelp_data_home + "/review_score" + review_data_modified + "/*"
+    if(iteration == 11):
+      # review_score_uw_unMod
+      # iteration 5
+      review_data_modified = '_uw_unMod'
+      review_score_data = yelp_data_home + "/review_score" + review_data_modified + "/*"
+    if(iteration == 12):
+      # review_score_simple_one
+      # iteration 0
+      review_data_modified = '_simple_one'
+      review_score_data = yelp_data_home + "/review_score" + review_data_modified + "/*"
+    if(iteration == 13):
+      # review_score_simple_modified_one
+      # iteration 1
+      review_data_modified = '_simple_modified_one'
+      review_score_data = yelp_data_home + "/review_score" + review_data_modified + "/*"
+    if(iteration == 14):
+      # review_score_simple_modified_uw_Mod
+      # iteration 2
+      review_data_modified = '_simple_modified_uw_Mod'
+      review_score_data = yelp_data_home + "/review_score" + review_data_modified + "/*"
+    if(iteration == 15):
+      # review_score_simple_uw_Mod
+      # iteration 3
+      review_data_modified = '_simple_uw_Mod'
+      review_score_data = yelp_data_home + "/review_score" + review_data_modified + "/*"
+    if(iteration == 16):
+      # review_score_simple_modified_uw_unMod
+      # iteration 4
+      review_data_modified = '_simple_modified_uw_unMod'
+      review_score_data = yelp_data_home + "/review_score" + review_data_modified + "/*"
+    if(iteration == 17):
+      # review_score_simple_uw_unMod
+      # iteration 5
+      review_data_modified = '_simple_uw_unMod'
+      review_score_data = yelp_data_home + "/review_score" + review_data_modified + "/*"
+      doneFlag = True
 
-  # Filter Data By City/State/Category
-  business = businessData \
-    .filter(lambda x: filter_by_city('Las Vegas', x[4])) \
-    .filter(lambda x: filter_by_state('NV', x[5])) \
-    .filter(lambda x: filter_by_category('Restaurants', x[2])) \
-    .map(lambda x: (x[0], x[1])) \
-    .join(reviewScore) \
-    .sortBy(lambda (businessID, data): data[1], False) \
-    .map(lambda (businessID, data): (businessID, data[0])) \
-    .zipWithIndex() \
-    .filter(lambda (data, rank): data[0] == "-sV52FN-D-I808tyRPEvwg") \
-    .collect()
-    #.foreach(lambda x: print_business(x)) 
-  print "#########################################################################"
-  print "                   Top 5 Business Given By Algorithm                     "
-  print business
-  print review_score_data
-  print "#########################################################################"
-  
-  print "#########################################################################"
-  print ("   BusinessCount =       " + str(businessCount))
-  print ("   ReviewScoreCount =    " + str(reviewScoreCount))
-  print "#########################################################################"
+    businessData = sc.textFile(business_data).map(lambda x: clean_business(x))
+    businessCount = businessData.count()
+
+    reviewScore = sc.sequenceFile(review_score_data)
+    reviewScoreCount = reviewScore.count()
+
+    def print_business(data):
+      print data
+
+    # Filter Data By City/State/Category
+    business = businessData \
+      .filter(lambda x: filter_by_city('Las Vegas', x[4])) \
+      .filter(lambda x: filter_by_state('NV', x[5])) \
+      .filter(lambda x: filter_by_category('Restaurants', x[2])) \
+      .map(lambda x: (x[0], x[1])) \
+      .join(reviewScore) \
+      .sortBy(lambda (businessID, data): data[1], False) \
+      .map(lambda (businessID, data): (businessID, data[0])) \
+      .zipWithIndex() \
+      .filter(lambda (data, rank): data[0] == "-sV52FN-D-I808tyRPEvwg") \
+      .collect()
+      #.foreach(lambda x: print_business(x)) 
+
+    f = open(yelp_data_home + "/output_search.out", "a")
+    output = ""
+    output = output + "#########################################################################" + "\n"
+    output = output + "                   Top 5 Business Given By Algorithm                     " + "\n"
+    output = output + str(business) + "\n"
+    output = output + review_score_data + "\n"
+    output = output + "#########################################################################" + "\n"
+    output = output + "#########################################################################" + "\n"
+    output = output + "   BusinessCount =       " + str(businessCount) + "\n"
+    output = output + "   ReviewScoreCount =    " + str(reviewScoreCount) + "\n"
+    output = output + "#########################################################################" + "\n"
+    output = output + "iteration = " + str(iteration) + "   " + str(datetime.today()) + "\n"
+    f.write(output)
+    f.close()
+    print output
+    iteration = iteration + 1
 
   print "DONE"  
   

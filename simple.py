@@ -143,7 +143,7 @@ def clean_user(data):
 
 def modifiedReviewScore(userWeight, reviewScore):
   # expects a number from 1-5 (stars)
-  return (reviewScore - 3) * userWeight
+  return (reviewScore - 3) * float(userWeight)
 
 def depreciationRate(reviewDate):
   # expects datetime
@@ -162,7 +162,7 @@ def individualReviewScore(MRS, total_number_reviews):
   # depreciation_rate = depreciationRate
   # total_number_reviews = total number of reviews for that business
   # advantage_rate = advantageRate
-  return MRS / total_number_reviews
+  return float(MRS) / total_number_reviews
 
 def get_data(text):
   # Expected:

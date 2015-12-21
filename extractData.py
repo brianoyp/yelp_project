@@ -162,7 +162,7 @@ def individualReviewScore(MRS_DR, total_number_reviews, advantage_rate):
   # depreciation_rate = depreciationRate
   # total_number_reviews = total number of reviews for that business
   # advantage_rate = advantageRate
-  return ((MRS_DR) / total_number_reviews) * advantage_rate
+  return (float(MRS_DR) / total_number_reviews) * float(advantage_rate)
 
 def get_data(text):
   # Expected:
