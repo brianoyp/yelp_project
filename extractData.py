@@ -143,7 +143,7 @@ def clean_user(data):
 
 def modifiedReviewScore(userWeight, reviewScore):
   # expects a number from 1-5 (stars)
-  return (reviewScore - 3) * userWeight
+  return (reviewScore - 3) * float(userWeight)
 
 def depreciationRate(reviewDate):
   # expects datetime
