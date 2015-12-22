@@ -64,3 +64,14 @@ iteration = 4
    ReviewScoreCount =    60785
 #########################################################################
 iteration = 5
+#########################################################################
+   BusinessCount =       61184
+   ReviewCount =         1569365
+   UserCount =           338961
+   ReviewBusinessCount = 1569365
+   ReviewUserCount =     1451974
+   MRScount =            60735
+   MRSandBIcount =       60735
+   ReviewScoreCount =    60735
+#########################################################################
+iteration = 6

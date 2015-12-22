@@ -261,6 +261,16 @@ if __name__ == '__main__':
       # iteration 5
       review_data_modified = '_simple_uw_unMod'
       review_score_data = yelp_data_home + "/review_score" + review_data_modified + "/*"
+    if(iteration == 18):
+      # review_score_simple_modified_uw_Mod_NEW
+      # iteration 6
+      review_data_modified = '_simple_modified_uw_Mod_NEW'
+      review_score_data = yelp_data_home + "/review_score" + review_data_modified + "/*"
+    if(iteration == 19):
+      # review_score_modified_uw_Mod_NEW
+      # iteration 6
+      review_data_modified = '_modified_uw_Mod_NEW'
+      review_score_data = yelp_data_home + "/review_score" + review_data_modified + "/*"
       doneFlag = True
 
     businessData = sc.textFile(business_data).map(lambda x: clean_business(x))

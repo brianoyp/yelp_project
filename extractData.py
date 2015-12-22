@@ -231,6 +231,10 @@ if __name__ == '__main__':
       review_data_modified = '_uw_unMod'
       review_data = yelp_data_home + "/yelp_academic_dataset_review.json"
       user_data = yelp_data_home + "/uwUnModified/*"
+    if(iteration == 6):
+      review_data_modified = '_modified_uw_Mod_NEW'
+      review_data = yelp_data_home + "/yelp_academic_dataset_review_modified.json"
+      user_data = yelp_data_home + "/uwModified_NEW/*"
       doneFlag = True
 
     if 'uw' in review_data_modified:
