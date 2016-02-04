@@ -1,4 +1,4 @@
-f = open("/home/derekn/CS6965/yelp_dataset_challenge_academic_dataset/yelp_academic_dataset_review.json", "a")
+f = open("data/yelp_academic_dataset_review.json", "a")
 
 f.write('{"votes": {"funny": 0, "useful": 99, "cool": 0}, "user_id": "farmerMain", "review_id": "farmerMainReview", "stars": 5, "date": "2015-01-02", "text": "", "type": "review", "business_id": "-sV52FN-D-I808tyRPEvwg"}\n')
 
